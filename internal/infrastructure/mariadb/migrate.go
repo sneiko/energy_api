@@ -1,24 +1,25 @@
 package mariadb
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
 	"sync"
 
+	_ "github.com/go-sql-driver/mysql"
 	migrateV4 "github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	_ "github.com/lib/pq"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/mysqldialect"
 )
 
 const migrationsPath = "file://./internal/infrastructure/mariadb/migrations"
 
 var once sync.Once
 
-func migrate(db *sql.DB, migrationsPath, dbName string) error {
+func migrate(db *bun.DB, migrationsPath, dbName string) error {
 	var err error
 
 	once.Do(func() {
@@ -31,7 +32,9 @@ func migrate(db *sql.DB, migrationsPath, dbName string) error {
 			err = migrateErr
 		}()
 
-		driver, migrateErr := mysql.WithInstance(db, &mysql.Config{})
+		db := bun.NewDB(db.DB, mysqldialect.New())
+
+		driver, migrateErr := mysql.WithInstance(db.DB, &mysql.Config{})
 		if migrateErr != nil {
 			return
 		}
@@ -56,9 +59,9 @@ func migrate(db *sql.DB, migrationsPath, dbName string) error {
 	return err
 }
 
-func Migrate(dsn string) func(*sql.DB) error {
+func Migrate(dsn string) func(*bun.DB) error {
 	parts := strings.Split(dsn, "/")
-	return func(db *sql.DB) error {
+	return func(db *bun.DB) error {
 		return migrate(db, migrationsPath, parts[1])
 	}
 }

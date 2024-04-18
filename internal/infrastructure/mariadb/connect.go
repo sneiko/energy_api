@@ -8,6 +8,8 @@ import (
 
 	//nolint:revive,nolintlint // Is needed for correct driver work.
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/mysqldialect"
 )
 
 const (
@@ -26,26 +28,24 @@ const (
 type Options func(*sql.DB) *sql.DB
 
 // Connect return new db connection pool.
-func Connect(ctx context.Context, dsn string, options ...Options) (*sql.DB, error) {
+func Connect(ctx context.Context, dsn string, options ...bun.DBOption) (*bun.DB, error) {
 	db, dbErr := sql.Open(mysqlDriver, dsn)
 	if dbErr != nil {
 		return nil, fmt.Errorf("db connect: %w", dbErr)
 	}
 
-	db.SetMaxOpenConns(maxOpenConns)
-	db.SetMaxIdleConns(maxIdleConns)
-	db.SetConnMaxIdleTime(connMaxIdleTime)
-	db.SetConnMaxLifetime(connMaxLifetime)
+	dbConn := bun.NewDB(db, mysqldialect.New(), options...)
 
-	for _, option := range options {
-		db = option(db)
-	}
+	dbConn.SetMaxOpenConns(maxOpenConns)
+	dbConn.SetMaxIdleConns(maxIdleConns)
+	dbConn.SetConnMaxIdleTime(connMaxIdleTime)
+	dbConn.SetConnMaxLifetime(connMaxLifetime)
 
-	if err := db.PingContext(ctx); err != nil {
+	if err := dbConn.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("db connect: %w", err)
 	}
 
-	return db, nil
+	return dbConn, nil
 }
 
 // MakeDSN make data source name.
