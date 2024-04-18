@@ -6,7 +6,7 @@ services:
     image: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: admin
-      MYSQL_DATABASE: autoparts
+      MYSQL_DATABASE: energy_tk
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin
     ports:

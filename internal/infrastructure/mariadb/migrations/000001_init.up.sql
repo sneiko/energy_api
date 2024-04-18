@@ -1,104 +1,47 @@
 CREATE TABLE users
 (
-    id         INT AUTO_INCREMENT,
-    phone      VARCHAR(13)  NOT NULL,
-    name       VARCHAR(120) NOT NULL,
-    is_active  BOOLEAN      NOT NULL DEFAULT FALSE,
-    last_login DATE,
-    created_at DATE         NOT NULL DEFAULT NOW(),
+    id            INT AUTO_INCREMENT,
+    token         VARCHAR(13) NOT NULL,
+    last_activity TIMESTAMP            DEFAULT current_timestamp,
+    created_at    TIMESTAMP   NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY (id),
-
-    UNIQUE INDEX users_phone_uk (phone)
+    UNIQUE INDEX users_token_uk (token)
 );
 
-CREATE TABLE parts
+CREATE TABLE invoices
 (
-    id          INT AUTO_INCREMENT,
-    part_number VARCHAR(60)  NOT NULL,
-    type        VARCHAR(120) NOT NULL,
-    name        VARCHAR(120) NOT NULL,
-    description VARCHAR(120) NOT NULL,
-    created_at  DATE         NOT NULL DEFAULT NOW(),
-    updated_at  DATE         NOT NULL DEFAULT NOW(),
+    id                           INT AUTO_INCREMENT,
+    invoice_number               VARCHAR(36),
+    user_id                      INT,
+    from_city                    VARCHAR(100),
+    to_city                      VARCHAR(100),
+    places                       INT,
+    weight                       INT,
+    volume                       FLOAT,
+    sender_is_paid               BOOLEAN,
+    recipient_is_paid            BOOLEAN,
+    delivery_date_from           INT,
+    delivery_date_from_formatted VARCHAR(48),
+    delivery_date_to             INT,
+    delivery_date_to_formatted   VARCHAR(48),
+    sender_total_price           INT,
+    recipient_total_price        INT,
 
     PRIMARY KEY (id),
-
-    INDEX parts_part_number_idx (part_number),
-    INDEX parts_type_idx (type)
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
-CREATE TABLE parts_images
+CREATE TABLE invoice_states
 (
-    id        INT AUTO_INCREMENT,
-    part_id   INT,
-    image_url VARCHAR(120) NOT NULL,
+    id                    INT AUTO_INCREMENT,
+    invoice_id            INT,
+    title                 VARCHAR(255),
+    moving_date           INT,
+    moving_date_formatted VARCHAR(48),
+    moving_from_city      VARCHAR(100),
+    moving_to_city        VARCHAR(100),
 
     PRIMARY KEY (id),
-
-    INDEX parts_images_part_id_idx (part_id),
-
-    FOREIGN KEY (part_id) REFERENCES parts (id) ON DELETE CASCADE
-);
-
-CREATE TABLE cars
-(
-    id          INT AUTO_INCREMENT,
-    brand       VARCHAR(120) NOT NULL,
-    model       VARCHAR(120) NOT NULL,
-    generation  INTEGER,
-    image_url   VARCHAR(120),
-    produced_at DATE         NOT NULL,
-    produced_to DATE,
-
-    PRIMARY KEY (id),
-
-    INDEX cars_brand_model_idx (brand, model)
-);
-
-CREATE TABLE car_parts
-(
-    car_id  INT NOT NULL,
-    part_id INT NOT NULL,
-
-    UNIQUE INDEX car_parts_car_id_idx (car_id, part_id),
-
-    FOREIGN KEY (car_id) REFERENCES cars (id) ON DELETE CASCADE,
-    FOREIGN KEY (part_id) REFERENCES parts (id) ON DELETE CASCADE
-
-);
-
-CREATE TABLE advertisements
-(
-    id         INT AUTO_INCREMENT,
-    user_id    INT          NOT NULL,
-    part_id    INT          NOT NULL,
-    prev_price REAL,
-    price      REAL         NOT NULL,
-    location   VARCHAR(200) NOT NULL,
-    created_at DATE         NOT NULL DEFAULT NOW(),
-    updated_at DATE         NOT NULL DEFAULT NOW(),
-
-    PRIMARY KEY (id),
-
-    INDEX advertisements_user_id_idx (user_id),
-    INDEX advertisements_part_id_idx (part_id),
-
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (part_id) REFERENCES parts (id)
-);
-
-CREATE TABLE advertisements_images
-(
-    id               INT AUTO_INCREMENT,
-    advertisement_id INT          NOT NULL,
-    image_url        VARCHAR(120) NOT NULL,
-
-    PRIMARY KEY (id),
-
-    INDEX advertisements_images_advertisement_id_idx (advertisement_id),
-
-    FOREIGN KEY (advertisement_id)
-        REFERENCES advertisements (id)
-        ON DELETE CASCADE
+    FOREIGN KEY (invoice_id) REFERENCES invoices (id) ON DELETE CASCADE
 );
