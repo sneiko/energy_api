@@ -8,7 +8,8 @@ import (
 	"energy_tk/internal/domain"
 )
 
-const daemonDelay = 1 * time.Minute
+const daemonDelay = 10 * time.Minute
+const sleepBetweenQuery = 1 * time.Second
 
 type InvoicesStorage interface {
 	GetList(ctx context.Context) (domain.InvoiceList, error)
@@ -34,9 +35,22 @@ func (i *InvoicesCheck) Do(ctx context.Context) error {
 		}
 
 		for _, invoice := range list {
+			tNow := time.Now()
 			if err := i.storage.UpdateState(ctx, &invoice); err != nil {
-				logger.Error("UpdateState", err)
+				logger.Error("UpdateState",
+					slog.Int("invoice_id", invoice.ID),
+					slog.String("invoice_number", invoice.InvoiceNumber),
+					slog.Duration("duration", time.Since(tNow)),
+					slog.String("error", err.Error()),
+				)
+				continue
 			}
+			logger.Info("UpdateState",
+				slog.Int("invoice_id", invoice.ID),
+				slog.String("invoice_number", invoice.InvoiceNumber),
+				slog.Duration("duration", time.Since(tNow)),
+			)
+			time.Sleep(sleepBetweenQuery)
 		}
 		time.Sleep(daemonDelay)
 	}

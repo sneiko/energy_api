@@ -114,6 +114,7 @@ func (s *Service) UpdateState(ctx context.Context, invoice *domain.Invoice) erro
 
 		states = append(states, domain.InvoiceState{
 			Title:               s.Title,
+			SiteID:              s.IdState,
 			MovingDate:          s.MovingDate,
 			MovingDateFormatted: s.MovingDateFormatted,
 			MovingFromCity:      s.StateInfo.Trip.CityFrom.Name,
@@ -121,7 +122,7 @@ func (s *Service) UpdateState(ctx context.Context, invoice *domain.Invoice) erro
 		})
 	}
 
-	for _, state := range invoice.States {
+	for _, state := range states {
 		if _, err = s.invoicesRepository.AddState(ctx, invoice.ID, &state); err != nil {
 			return fmt.Errorf("UpdateState - error: %w", err)
 		}
