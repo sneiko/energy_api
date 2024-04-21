@@ -35,6 +35,7 @@ CREATE TABLE invoices
 CREATE TABLE invoice_states
 (
     id                    INT AUTO_INCREMENT,
+    site_id               INT,
     invoice_id            INT,
     title                 VARCHAR(255),
     moving_date           INT,

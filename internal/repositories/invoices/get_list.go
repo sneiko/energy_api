@@ -2,33 +2,26 @@ package invoices
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
+
+	"github.com/blockloop/scan"
 
 	"energy_tk/internal/domain"
 )
 
-const queryGetList = `
+const getList = `
 	SELECT * FROM invoices
-	LEFT JOIN users u ON users.id = invoices.user_id
-	WHERE u.token = $1
 `
 
-// GetListByUserToken create new user
-func (s *Repository) GetListByUserToken(ctx context.Context, token string) ([]domain.Invoice, error) {
-	result, err := s.db.
-		NewRaw(queryGetList, token).
-		Exec(ctx)
+func (s *Repository) GetList(ctx context.Context) (domain.InvoiceList, error) {
+	result, err := s.db.QueryContext(ctx, getList)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return []domain.Invoice{}, nil
-		}
-		return nil, fmt.Errorf("User.Create - insert: %w", err)
+		return nil, fmt.Errorf("Invoices.GetList - select: %w", err)
 	}
+	defer result.Close()
 
-	var invoices []domain.Invoice // todo: implement right
-	if err := result.Scan(&invoices); err != nil {
+	var invoices domain.InvoiceList
+	if err := scan.Rows(&invoices, result); err != nil {
 		return nil, fmt.Errorf("User.Create - scan: %w", err)
 	}
 

@@ -2,16 +2,13 @@ package domain
 
 import (
 	"time"
-
-	"github.com/uptrace/bun"
 )
 
 type User struct {
-	bun.BaseModel `bun:"table:users"`
-
-	ID           int       `bun:"id,pk"`
-	Token        string    `bun:"token"`
-	LastActivity time.Time `bun:"last_activity"`
+	ID           int       `db:"id"`
+	Token        string    `db:"token"`
+	LastActivity time.Time `db:"last_activity"`
+	CreatedAt    time.Time `db:"created_at"`
 }
 
 func (u *User) UpdateLastActivity() {

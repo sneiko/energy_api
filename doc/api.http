@@ -1,0 +1,16 @@
+### Auth
+POST localhost:8080/api/v1/users/auth
+Content-Type: application/json
+
+{
+  "token": "abrakadabra"
+}
+
+### Add Invoice
+POST localhost:8080/api/v1/invoices/add
+Content-Type: application/json
+Authorization: abrakadabra
+
+{
+  "number": "2404-2904661"
+}

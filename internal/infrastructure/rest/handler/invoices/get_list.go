@@ -10,7 +10,7 @@ import (
 )
 
 type GetInvoiceListService interface {
-	GetListByUserToken(ctx context.Context, token string) ([]domain.Invoice, error)
+	GetListByUserToken(ctx context.Context, token string) (domain.InvoiceList, error)
 }
 
 func GetInvoiceList(service GetInvoiceListService) http.HandlerFunc {

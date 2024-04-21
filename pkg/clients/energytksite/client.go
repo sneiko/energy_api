@@ -27,6 +27,7 @@ func (c *Client) CheckInvoice(number string) (*InvoiceResult, error) {
 	var response InvoiceResult
 	res, err := c.client.R().
 		SetResult(&response).
+		SetHeader("Content-Type", "application/json;charset=utf-8").
 		Get("/tracking/?docNum=" + number)
 	if err != nil {
 		return nil, err

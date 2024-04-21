@@ -8,8 +8,6 @@ import (
 
 	//nolint:revive,nolintlint // Is needed for correct driver work.
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/mysqldialect"
 )
 
 const (
@@ -28,27 +26,25 @@ const (
 type Options func(*sql.DB) *sql.DB
 
 // Connect return new db connection pool.
-func Connect(ctx context.Context, dsn string, options ...bun.DBOption) (*bun.DB, error) {
+func Connect(ctx context.Context, dsn string) (*sql.DB, error) {
 	db, dbErr := sql.Open(mysqlDriver, dsn)
 	if dbErr != nil {
 		return nil, fmt.Errorf("db connect: %w", dbErr)
 	}
 
-	dbConn := bun.NewDB(db, mysqldialect.New(), options...)
+	db.SetMaxOpenConns(maxOpenConns)
+	db.SetMaxIdleConns(maxIdleConns)
+	db.SetConnMaxIdleTime(connMaxIdleTime)
+	db.SetConnMaxLifetime(connMaxLifetime)
 
-	dbConn.SetMaxOpenConns(maxOpenConns)
-	dbConn.SetMaxIdleConns(maxIdleConns)
-	dbConn.SetConnMaxIdleTime(connMaxIdleTime)
-	dbConn.SetConnMaxLifetime(connMaxLifetime)
-
-	if err := dbConn.PingContext(ctx); err != nil {
+	if err := db.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("db connect: %w", err)
 	}
 
-	return dbConn, nil
+	return db, nil
 }
 
 // MakeDSN make data source name.
 func MakeDSN(addr, username, password, database string) string {
-	return fmt.Sprintf("%s:%s@tcp(%s)/%s", username, password, addr, database)
+	return fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", username, password, addr, database)
 }

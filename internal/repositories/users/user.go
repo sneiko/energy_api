@@ -1,14 +1,14 @@
 package users
 
 import (
-	"github.com/uptrace/bun"
+	"database/sql"
 )
 
 type Repository struct {
-	db *bun.DB
+	db *sql.DB
 }
 
-func New(db *bun.DB) *Repository {
+func New(db *sql.DB) *Repository {
 	return &Repository{
 		db: db,
 	}

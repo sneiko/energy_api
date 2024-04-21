@@ -20,9 +20,11 @@ type CreateInvoiceRequest struct {
 func CreateInvoice(service CreateInvoiceService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := middleware.GetUserToken(r.Context())
-		req, err := render.DecodeJSON[CreateInvoiceRequest](r.Body)
+		var req CreateInvoiceRequest
+		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
 			render.Json(w, http.StatusBadRequest, fmt.Errorf("invalid request: %w", err))
+			return
 		}
 
 		if err := service.Create(r.Context(), token, req.Number); err != nil {

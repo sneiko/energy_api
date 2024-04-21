@@ -3,15 +3,18 @@ package invoices
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"energy_tk/internal/domain"
 	"energy_tk/pkg/clients/energytksite"
 )
 
 type InvoicesRepository interface {
-	Create(ctx context.Context, invoice *domain.Invoice) (int64, error)
-	GetListByUserToken(ctx context.Context, token string) ([]domain.Invoice, error)
+	Create(ctx context.Context, invoice *domain.Invoice) (int, error)
+	GetListByUserToken(ctx context.Context, token string) (domain.InvoiceList, error)
 	GetDetails(ctx context.Context, id int) (*domain.Invoice, error)
+	GetList(ctx context.Context) (domain.InvoiceList, error)
+	AddState(ctx context.Context, invoiceID int, state *domain.InvoiceState) (int, error)
 }
 
 type UsersRepository interface {
@@ -81,7 +84,7 @@ func (s *Service) Create(ctx context.Context, token string, number string) error
 	return err
 }
 
-func (s *Service) GetListByUserToken(ctx context.Context, token string) ([]domain.Invoice, error) {
+func (s *Service) GetListByUserToken(ctx context.Context, token string) (domain.InvoiceList, error) {
 	list, err := s.invoicesRepository.GetListByUserToken(ctx, token)
 	return list, err
 }
@@ -89,4 +92,40 @@ func (s *Service) GetListByUserToken(ctx context.Context, token string) ([]domai
 func (s *Service) GetDetails(ctx context.Context, id int) (*domain.Invoice, error) {
 	data, err := s.invoicesRepository.GetDetails(ctx, id)
 	return data, err
+}
+
+func (s *Service) GetList(ctx context.Context) (domain.InvoiceList, error) {
+	return s.invoicesRepository.GetList(ctx)
+}
+
+func (s *Service) UpdateState(ctx context.Context, invoice *domain.Invoice) error {
+	siteData, err := s.siteClient.CheckInvoice(invoice.InvoiceNumber)
+	if err != nil {
+		return fmt.Errorf("CheckInvoice - error: %w", err)
+	}
+
+	states := make([]domain.InvoiceState, len(siteData.States))
+	for _, s := range siteData.States {
+		if slices.ContainsFunc(invoice.States, func(state domain.InvoiceState) bool {
+			return state.SiteID == s.IdState
+		}) {
+			continue
+		}
+
+		states = append(states, domain.InvoiceState{
+			Title:               s.Title,
+			MovingDate:          s.MovingDate,
+			MovingDateFormatted: s.MovingDateFormatted,
+			MovingFromCity:      s.StateInfo.Trip.CityFrom.Name,
+			MovingToCity:        s.StateInfo.Trip.CityTo.Name,
+		})
+	}
+
+	for _, state := range invoice.States {
+		if _, err = s.invoicesRepository.AddState(ctx, invoice.ID, &state); err != nil {
+			return fmt.Errorf("UpdateState - error: %w", err)
+		}
+	}
+
+	return nil
 }

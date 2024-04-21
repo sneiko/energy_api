@@ -31,10 +31,9 @@ func Json(w http.ResponseWriter, status int, data any) {
 	}
 }
 
-func DecodeJSON[T comparable](body io.ReadCloser) (*T, error) {
-	var req T
-	if err := json.NewDecoder(body).Decode(req); err != nil {
-		return nil, err
+func DecodeJSON[T any](body io.ReadCloser, model *T) error {
+	if err := json.NewDecoder(body).Decode(&model); err != nil {
+		return err
 	}
-	return &req, nil
+	return nil
 }

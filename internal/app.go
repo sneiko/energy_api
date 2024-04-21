@@ -34,10 +34,10 @@ func RunApp(ctx context.Context) error {
 	invoicesRepository := invoicesRepo.New(db)
 
 	usersService := users.New(usersRepository)
-	invoicesService := invoices.New(invoicesRepository, siteClient)
+	invoicesService := invoices.New(usersRepository, invoicesRepository, siteClient)
 
 	daemons := workers.New(ctx)
-	daemons.Add(workers.NewInvoicesCheck())
+	daemons.Add(workers.NewInvoicesCheck(invoicesService))
 	daemons.Start()
 
 	if err := provideRest(

@@ -13,6 +13,7 @@ func AppAuthMiddleware() func(http.Handler) http.Handler {
 			userToken := r.Header.Get("Authorization")
 			if userToken == "" {
 				render.Json(w, http.StatusBadRequest, "token is required")
+				return
 			}
 			ctx := context.WithValue(r.Context(), "token", userToken)
 			next.ServeHTTP(w, r.WithContext(ctx))

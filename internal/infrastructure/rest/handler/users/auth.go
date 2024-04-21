@@ -18,7 +18,8 @@ type AuthRequest struct {
 
 func Auth(service AuthService) http.HandlerFunc {
 	decodeRequest := func(r *http.Request) (*AuthRequest, error) {
-		req, err := render.DecodeJSON[AuthRequest](r.Body)
+		var req AuthRequest
+		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
 			return nil, err
 		}
@@ -27,7 +28,7 @@ func Auth(service AuthService) http.HandlerFunc {
 			return nil, fmt.Errorf("token is required")
 		}
 
-		return req, nil
+		return &req, nil
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := decodeRequest(r)

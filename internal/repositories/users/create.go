@@ -8,7 +8,7 @@ import (
 )
 
 const queryCreate = `
-	INSERT INTO users(token, now()) VALUES($1, $2)
+	INSERT INTO users(token, created_at) VALUES(?, now())
 	RETURNING id
 `
 
